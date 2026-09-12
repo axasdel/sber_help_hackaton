@@ -394,22 +394,15 @@ function renderAnalysis() {
 function renderQuestion() {
 
     const index = state.currentQuestion;
-
-    const question = questions[index];
-
+    const question = state.questions;
 
     if (!question) {
-
-        renderBackendError(
-            "Backend не вернул уточняющий вопрос."
-        );
-
+        showError("Не удалось получить уточняющий вопрос.");
+        renderStart();
         return;
     }
 
-
     screen.innerHTML = `
-
         <section class="page fade-in">
 
             <div class="page-content question-page">
@@ -419,22 +412,19 @@ function renderQuestion() {
                     уточнить
                 </h1>
 
-
                 <div class="question-card">
-
                     <div class="question-text">
-                        ${escapeHtml(question.title)}
+                        ${escapeHtml(question.title || question)}
                     </div>
-
                 </div>
-
 
                 <textarea
                     id="questionAnswer"
                     class="question-textarea"
-                    placeholder="Введите ваш ответ..."
+                    placeholder="${escapeHtml(
+                        question.placeholder || "Введите ваш ответ..."
+                    )}"
                 >${escapeHtml(state.answers[index] || "")}</textarea>
-
 
                 <button
                     id="continueButton"
@@ -446,69 +436,40 @@ function renderQuestion() {
             </div>
 
         </section>
-
     `;
-
 
     const answerInput =
         document.getElementById("questionAnswer");
 
-
     const continueButton =
         document.getElementById("continueButton");
 
+    continueButton.addEventListener("click", () => {
 
-    continueButton.addEventListener(
-        "click",
-        () => {
+        const answer = answerInput.value.trim();
 
-            const answer =
-                answerInput.value.trim();
-
-
-            if (!answer) {
-
-                answerInput.classList.add(
-                    "input-error"
-                );
-
-                answerInput.focus();
-
-                return;
-            }
-
-
-            state.answers[index] = answer;
-
-
-            if (
-                state.currentQuestion <
-                questions.length - 1
-            ) {
-
-                state.currentQuestion++;
-
-                renderQuestion();
-
-            } else {
-
-                loadConfirmation();
-            }
+        if (!answer) {
+            answerInput.classList.add("input-error");
+            answerInput.focus();
+            return;
         }
-    );
 
+        state.answers[index] = answer;
 
-    answerInput.addEventListener(
-        "input",
-        () => {
-
-            answerInput.classList.remove(
-                "input-error"
-            );
+        if (
+            state.currentQuestion < state.questions.length - 1
+        ) {
+            state.currentQuestion++;
+            renderQuestion();
+        } else {
+            loadConfirmation();
         }
-    );
+    });
+
+    answerInput.addEventListener("input", () => {
+        answerInput.classList.remove("input-error");
+    });
 }
-
 // ======================================================
 // ПОДГОТОВКА SUMMARY
 // ======================================================
